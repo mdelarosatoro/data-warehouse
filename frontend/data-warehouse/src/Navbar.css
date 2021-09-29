@@ -1,0 +1,82 @@
+.nav {
+    background-color: #1D72C2;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 10px 10px 10px;
+    height: 64px;
+    position: sticky;
+    top: 0;
+}
+
+.nav__left {
+    display: flex;
+    margin-left: 30px;
+}
+
+.nav__right {
+    display: flex;
+}
+
+.nav__ul {
+    display: flex;
+    width: fit-content;
+    align-self: flex-end;
+    transition: 0.3s ease all;
+}
+
+.nav__li {
+    list-style: none;
+    margin-right: 30px;
+    cursor: pointer;
+    display: block;
+    width: fit-content;
+    height: 53px;
+    padding: 15px 20px 15px 20px;
+    margin-bottom: -10px;
+}
+
+.nav__li:hover {
+    border-bottom: 3px solid white;
+}
+
+@media screen and (max-width: 731px) {
+    .nav {
+        position: relative;
+    }
+    
+    .nav__ul {
+        flex-direction: column;
+        width: 100vw;
+        position: absolute;
+        top: 64px;
+        left: 0;
+        transition: 0.3s ease all;
+    }
+
+    .nav__li {
+        background-color: #1D72C2;
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid whitesmoke;
+        margin-bottom: 0px;
+    }
+
+    .nav__li:hover {
+        border-bottom: 1px solid whitesmoke;
+    }
+    
+    .first {
+        border-top: 1px solid whitesmoke;
+    }
+    
+    @keyframes fadeInAnimation {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    .fadeIn {
+        animation: fadeInAnimation 2s;
+    }
+    
+}
