@@ -64,11 +64,35 @@ server.use(expressJwt({
 })
 );
 
+//MIDDLEWARES
+const validarCamposRegistro = (req, res ,next) => {
+    const {
+        name,
+        lastName,
+        email,
+        isAdmin,
+        password
+    } = req.body;
+
+    if (
+        !name || name == '' ||
+        !lastName || lastName == '' ||
+        !email || email == '' ||
+        !isAdmin || isAdmin == '' ||
+        !password || password == ''
+    ){
+        res.status(400).json({error: `Debe ingresar todos los campos.`})
+    } else {
+        next();
+    }
+}
+
 //ENDPOINTS
 
 //Users-------
 //POST - /register - create a new user in the DB
 server.post("/register",
+validarCamposRegistro,
 async (req, res) => {
     try {
         const {
@@ -76,6 +100,7 @@ async (req, res) => {
             lastName,
             email,
             profilePicUrl,
+            isAdmin,
             password
         } = req.body;
 
@@ -86,6 +111,7 @@ async (req, res) => {
                 lastName,
                 email,
                 profilePicUrl,
+                isAdmin: parseInt(isAdmin),
                 password: hash
             });
 
@@ -123,13 +149,40 @@ async (req, res) => {
                         lastName: possibleUser.lastName,
                     },
                     JWT_SECRET,
-                    { expiresIn: '60m' });
+                    { expiresIn: '30m' });
         
                     res.status(200).json({token});
                 }
             });
 
         }
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//USER-DATA Retrieve user data
+server.get('/user-data',
+async (req, res) => {  
+    try {
+        const userEmail = req.user.email;
+    
+        const userDb = await Users.findOne({
+            where: { email: userEmail }
+        })
+
+        res.status(200).json(userDb);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//logged in test
+server.get("/test", (req, res) => {
+    try {
+        res.status(200).json('success')
     } catch (error) {
         console.error(error.message);
         res.status(400).json({error: error.message});

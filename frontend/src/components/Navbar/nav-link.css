@@ -1,0 +1,9 @@
+.nav-link {
+    border-bottom: 3px solid rgba(0,0,0,0);
+    transition: 0.3s ease all;
+}
+
+.nav-link:hover {
+    border-bottom: 3px solid whitesmoke;
+    transition: 0.3s ease all;
+}
