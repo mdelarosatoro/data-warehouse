@@ -1,187 +1,230 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-// import Input from '../Input';
+import PrimaryButton from '../PrimaryButton';
 
-
-const Container = styled.div`
-    background-color: white;
-    min-height: 90vh;
-    color: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding-top: 10vh;
-    padding-bottom: 10vh;
+const ButtonContainer = styled.div`
+    margin: 20px auto;
+    width: fit-content;
 `;
 
-const Form = styled.form`
-    margin-top: -40px;
+const UserTable = styled.div`
     display: flex;
     flex-direction: column;
-    width: 40vw;
-    border: 3px solid #1D72C2;
-    border-radius: 10px;
-    padding: 60px 40px 50px 40px;
-    box-shadow: 7px 7px 3px rgba(0,0,0,0.6);
+    width: 80vw;
+    box-shadow: 2px 2px 6px black;
+    margin: 40px auto;
 `;
 
-const Title = styled.h1`
-    text-align: center;
-    margin-bottom: 30px;
-    color: #1D72C2;
+const Row = styled.div`
+    display: flex;
+    border: 1px solid black;
+    border-top: none;
+    width: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
 `;
 
-const Label = styled.label`
-    margin-bottom: 10px;
+const Cell = styled.p`
+    display: block;
+    padding: 8px;
 `;
 
-const Input = styled.input`
-    border: 1px solid #CCCCCC;
-    padding: 5px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    outline: none;
+const NameCell = styled(Cell)`
+    width: 15%;
 `;
 
-const RequiredInput = styled(Input)`
-    ${props => props.value === '' && 'border: 1px solid red;'}
+const LastNameCell = styled(Cell)`
+    width: 25%;
 `;
 
-const Select = styled.select`
-    border: 1px solid #CCCCCC;
-    padding: 5px;
-    margin-bottom: 10px;
-    border-radius: 4px;
+const EmailCell = styled(Cell)`
+    width: 35%;
 `;
 
-const PrimaryButton = styled.button`
-    padding: 3px;
+const AdminCell = styled(Cell)`
+    width: 15%;
+`;
+
+const EditInput = styled.input`
+    margin-left: 4px;
+    margin-right: 4px;
+`;
+
+const NameInput = styled(EditInput)`
+    width: 15%;
+`;
+
+const LastNameInput = styled(EditInput)`
+    width: 25%;
+`;
+
+const AdminInput = styled.select`
+    width: 15%;
+`
+
+const TableButtonCell = styled(Cell)`
+    width: 5%;
+`;
+
+const TitleCell = styled(Cell)`
+    font-weight: bold;
+    font-size: 20px;
+`;
+
+const NameTitleCell = styled(TitleCell)`
+    width: 15%;
+`;
+
+const LastNameTitleCell = styled(TitleCell)`
+    width: 25%;
+`;
+
+const EmailTitleCell = styled(TitleCell)`
+    width: 35%;
+`;
+
+const AdminTitleCell = styled(TitleCell)`
+    width: 15%;
+`;
+
+const TableButton = styled.button`
     background-color: #1D72C2;
     color: white;
-    width: 173px;
-    height: 42px;
+    padding: 2px;
     border-radius: 2px;
-    margin-top: 10px;
-`;
-
-const ValidationText = styled.span`
-    color: red;
-    font-size: 10px;
-    margin-top: -10px;
-`;
-
-const Span = styled.span`
-    color: red;
-    font-size: 12px;
+    cursor: pointer;
+    transition: 0.3s ease all;
+    &:hover{
+        color: black;
+        transition: 0.3s ease all;
+    }
 `;
 
 function Usuarios() {
-    const [nombre, setNombre] = useState('');
-    const [apellido, setApellido] = useState('');
-    const [email, setEmail] = useState('');
-    const [profilePicUrl, setProfilePicUrl] = useState('');
-    const [isAdmin, setIsAdmin] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordConfirm, setPasswordConfirm] = useState('');
-
-    const handleNombre = (e) => {
-        setNombre(e.target.value);
-    }
-    const handleApellido = (e) => {
-        setApellido(e.target.value);
-    }
-    const handleEmail = (e) => {
-        setEmail(e.target.value);
-    }
-    const handleProfilePicUrl = (e) => {
-        setProfilePicUrl(e.target.value);
-    }
-    const handleIsAdmin = (e) => {
-        setIsAdmin(e.target.value);
-    }
-    const handlePassword = (e) => {
-        setPassword(e.target.value);
-    }
-    const handlePasswordConfirm = (e) => {
-        setPasswordConfirm(e.target.value);
-    }
-    const handleClick = async (e) => {
-        e.preventDefault();
-
-        //primero revisar que los campos obligatorios estén llenos
-
-
-        const payload = {
-            name: nombre,
-            lastName: apellido,
-            email,
-            profilePicUrl,
-            isAdmin,
-            password
-        }
-        console.log(payload)
-        const options = {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            method: 'POST',
-            body: JSON.stringify(payload)
-        }
-
-        const response = await fetch('http://localhost:3000/register', options);
-        if (response.status === 201) {
+    const [userData, setUserData] = useState([]);
+    
+    //load users on render
+    useEffect(() => {
+        const fetchUsers = async () => {
+            const options = {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                method: 'GET'
+            }
+            const response = await fetch('http://localhost:3000/all-users', options);
             const result = await response.json();
-            console.log(result)
-            alert(`Usuario ${email} creado correctamente`);
-            setNombre('');
-            setApellido('');
-            setEmail('');
-            setProfilePicUrl('');
-            setIsAdmin('');
-            setPassword('');
-            setPasswordConfirm('');
-        } else {
-            alert('No tiene permiso para realizar esta operación.')
+            const userData = result.map((user) => (
+                {
+                    key: user.id,
+                    name: user.name,
+                    lastName: user.lastName,
+                    email: user.email,
+                    isAdmin: user.isAdmin,
+                    isEditable: false
+                }
+            ));
+            setUserData(userData);
         }
-    };
+        fetchUsers();
+    }, [userData])
+
+    const handleEditClick = (e) => {
+        console.log(e.target)
+        const userDataCopy = [...userData]
+        console.log(userDataCopy)
+        console.log(e.target.getAttribute('id'))
+        // const userToEdit = userDataCopy.find((user) => user.key === parseInt(e.target.getAttribute('id')));
+        // console.log(userToEdit)
+        // userToEdit.isEditable = !userToEdit.isEditable
+        userDataCopy[parseInt(e.target.getAttribute('id'))-1].isEditable = true;
+
+        setUserData(userDataCopy);
+    }
+
+    const handleUserChange = (e) => {
+
+    }
+
+    const handleSaveClick = async (e) => {
+        const confirmation = window.confirm('¿Está seguro de realizar el cambio?');
+        if (confirmation) {
+            const userId = parseInt(e.target.getAttribute('id'));
+            console.log(userId);
+            const newUserInfo = {
+                name: e.target.parentElement.parentElement.children[0].value,
+                lastName: e.target.parentElement.parentElement.children[1].value,
+                isAdmin: e.target.parentElement.parentElement.children[3].value ? true : false,
+            };
+            console.log(newUserInfo)
+            
+            const options = {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                },
+                method: 'PUT',
+                body: JSON.stringify(newUserInfo)
+            }
+    
+            const response = await fetch(`http://localhost:3000/users/${userId}`, options);
+            const result = await response.json();
+            alert(result);
+            console.log(result);
+    
+            //change back user.isEditable to false
+            const userDataCopy = [...userData];
+    
+            userDataCopy[userId-1].isEditable = false;
+    
+            setUserData(userDataCopy);
+        }
+    }
+
+    const handleDeleteClick = () => {
+
+    }
 
     return (
-        <Container>
-            <Form>
-                <Title>Crear Nuevo Usuario</Title>
-                
-                <Label htmlFor="nombre">Nombre<Span>*</Span></Label>
-                <RequiredInput name="nombre" value={nombre} onChange={handleNombre} required></RequiredInput>
-                <ValidationText>{!nombre && 'Este campo es obligatorio'}</ValidationText>
-
-                <Label htmlFor="apellido">Apellido<Span>*</Span></Label>
-                <RequiredInput name="apellido" value={apellido} onChange={handleApellido} required></RequiredInput>
-                <ValidationText>{!apellido && 'Este campo es obligatorio'}</ValidationText>
-
-                <Label htmlFor="email">Email<Span>*</Span></Label>
-                <RequiredInput name="email" value={email} onChange={handleEmail} required></RequiredInput>
-                <ValidationText>{!email && 'Este campo es obligatorio'}</ValidationText>
-
-                <Label htmlFor="profilePicUrl">Perfil</Label>
-                <Input name="profilePicUrl" value={profilePicUrl} onChange={handleProfilePicUrl}></Input>
-
-                <Label htmlFor="rol">Rol</Label>
-                <Select value={isAdmin} onChange={handleIsAdmin} name="rol" id="rol">
-                    <option value="0">Basico</option>
-                    <option value="1">Admin</option>
-                </Select>
-
-                <Label htmlFor="password">Contraseña<Span>*</Span></Label>
-                <RequiredInput type="password" name="password" value={password} onChange={handlePassword} required></RequiredInput>
-                <ValidationText>{!password && 'Este campo es obligatorio'}</ValidationText>
-
-                <Label htmlFor="password-confirm">Confirmar contraseña<Span>*</Span></Label>
-                <RequiredInput type="password" name="password-confirm" value={passwordConfirm} onChange={handlePasswordConfirm} required></RequiredInput>
-                <ValidationText>{!passwordConfirm && 'Este campo es obligatorio'}</ValidationText>
-
-                <PrimaryButton onClick={handleClick}>Crear Usuario</PrimaryButton>
-            </Form>
-        </Container>
+        <div>
+            <ButtonContainer>
+                <NavLink to='/crear-usuario'>
+                    <PrimaryButton text='Crear Usuario' />
+                </NavLink>
+            </ ButtonContainer>
+            <UserTable>
+                <Row>
+                    <NameTitleCell>Nombre</NameTitleCell>
+                    <LastNameTitleCell>Apellido</LastNameTitleCell>
+                    <EmailTitleCell>Email</EmailTitleCell>
+                    <AdminTitleCell>Administrador</AdminTitleCell>
+                </Row>
+                {userData && userData.map((user) => {
+                    return (
+                    <Row key={user.key} >
+                        {!user.isEditable ? <NameCell>{user.name}</NameCell> : <NameInput defaultValue={user.name} onChange={handleUserChange} />}
+                        {!user.isEditable ? <LastNameCell>{user.lastName}</LastNameCell> : <LastNameInput defaultValue={user.lastName} />}
+                        <EmailCell>{user.email}</EmailCell>
+                        {!user.isEditable ? <AdminCell>{user.isAdmin ? 'Administrador' : 'Básico'}</AdminCell> : (
+                            <AdminInput defaultValue={user.isAdmin ? 'Administrador' : 'Básico'}>
+                                <option value='1' >Administrador</option>
+                                <option value='0' >Básico</option>
+                            </AdminInput>
+                        )}
+                        <TableButtonCell>
+                            {!user.isEditable ?
+                            <TableButton key={user.key} id={user.key} onClick={handleEditClick} >Edit</TableButton> :
+                            <TableButton key={user.key} id={user.key} onClick={handleSaveClick} >Save</TableButton>}
+                        </TableButtonCell>
+                        <TableButtonCell>
+                            <TableButton key={user.key} onClick={handleDeleteClick} >Delete</TableButton>
+                        </TableButtonCell>
+                    </Row>
+                    )
+                })}
+            </UserTable>
+        </div>
     )
 }
 

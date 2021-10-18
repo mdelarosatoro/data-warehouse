@@ -27,7 +27,7 @@ const server = express();
 //politica de limite de peticiones
 const limiter = rateLimit({
     windowMs: 10 * 1000,
-    max: 30,
+    max: 40,
     message: "Excediste el número de peticiones. Intenta más tarde."
 });
 
@@ -60,7 +60,7 @@ server.use(expressJwt({
     secret: JWT_SECRET,
     algorithms: ["HS256"],
 }).unless({
-    path: ["/login", "/register"]
+    path: ["/login"]
 })
 );
 
@@ -87,11 +87,26 @@ const validarCamposRegistro = (req, res ,next) => {
     }
 }
 
+const validateAdmin = async (req, res, next) => {
+    const userEmail = req.user.email;
+
+    const possibleAdmin = await Users.findOne({
+        where: { email: userEmail }
+    })
+
+    if (possibleAdmin.isAdmin) {
+        next();
+    } else {
+        res.status(400).json({error: `User ${userEmail} is not admin`})
+    }
+}
+
 //ENDPOINTS
 
 //Users-------
 //POST - /register - create a new user in the DB
 server.post("/register",
+validateAdmin,
 validarCamposRegistro,
 async (req, res) => {
     try {
@@ -111,7 +126,7 @@ async (req, res) => {
                 lastName,
                 email,
                 profilePicUrl,
-                isAdmin: parseInt(isAdmin),
+                isAdmin,
                 password: hash
             });
 
@@ -156,6 +171,53 @@ async (req, res) => {
             });
 
         }
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//GET ALL USERS IN THE DB
+server.get('/all-users',
+validateAdmin,
+async (req, res) => {
+    try {
+        const users = await Users.findAll({
+            attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
+        });
+
+        res.status(200).json(users);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+})
+
+//editar información de un usuario
+server.put('/users/:userId',
+validateAdmin,
+async (req, res) => {
+    try {
+        const {
+            name,
+            lastName,
+            isAdmin
+        } = req.body;
+
+        await Users.update(
+                {
+                    name,
+                    lastName,
+                    isAdmin
+                },
+                {
+                    where: {
+                        id: req.params.userId
+                    }
+                }
+            );
+
+        res.status(200).json(`User updated succesfully`)
     } catch (error) {
         console.error(error.message);
         res.status(400).json({error: error.message});
