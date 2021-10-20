@@ -32,7 +32,12 @@ const Users = sequelize.define('users', {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: true
-    }
+    },
+    active: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
+    },
 },
 {
     tableName: 'users',

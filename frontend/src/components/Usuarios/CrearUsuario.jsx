@@ -109,38 +109,42 @@ function CrearUsuario() {
     const handleClick = async (e) => {
         e.preventDefault();
 
-        const payload = {
-            name: nombre,
-            lastName: apellido,
-            email,
-            profilePicUrl,
-            isAdmin,
-            password
-        }
-        console.log(payload)
-        const options = {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            method: 'POST',
-            body: JSON.stringify(payload)
-        }
-
-        const response = await fetch('http://localhost:3000/register', options);
-        if (response.status === 201) {
-            const result = await response.json();
-            console.log(result)
-            alert(`Usuario ${email} creado correctamente`);
-            setNombre('');
-            setApellido('');
-            setEmail('');
-            setProfilePicUrl('');
-            setIsAdmin('');
-            setPassword('');
-            setPasswordConfirm('');
+        if (password != passwordConfirm) {
+            alert('Passwords do not match.')
         } else {
-            alert('No tiene permiso para realizar esta operación.')
+            const payload = {
+                name: nombre,
+                lastName: apellido,
+                email,
+                profilePicUrl,
+                isAdmin,
+                password
+            }
+            console.log(payload)
+            const options = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                method: 'POST',
+                body: JSON.stringify(payload)
+            }
+    
+            const response = await fetch('http://localhost:3000/register', options);
+            if (response.status === 201) {
+                const result = await response.json();
+                console.log(result)
+                alert(`Usuario ${email} creado correctamente`);
+                setNombre('');
+                setApellido('');
+                setEmail('');
+                setProfilePicUrl('');
+                setIsAdmin('');
+                setPassword('');
+                setPasswordConfirm('');
+            } else {
+                alert('No tiene permiso para realizar esta operación.')
+            }
         }
     };
 

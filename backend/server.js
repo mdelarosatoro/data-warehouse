@@ -27,7 +27,7 @@ const server = express();
 //politica de limite de peticiones
 const limiter = rateLimit({
     windowMs: 10 * 1000,
-    max: 40,
+    max: 100,
     message: "Excediste el número de peticiones. Intenta más tarde."
 });
 
@@ -88,6 +88,11 @@ const validarCamposRegistro = (req, res ,next) => {
 }
 
 const validateAdmin = async (req, res, next) => {
+    const users = await Users.findAll({});
+    if (users.length === 0) {
+        next();
+    }
+    
     const userEmail = req.user.email;
 
     const possibleAdmin = await Users.findOne({
@@ -183,7 +188,10 @@ validateAdmin,
 async (req, res) => {
     try {
         const users = await Users.findAll({
-            attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
+            attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
+            where: {
+                active: true
+            }
         });
 
         res.status(200).json(users);
@@ -218,6 +226,27 @@ async (req, res) => {
             );
 
         res.status(200).json(`User updated succesfully`)
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//desactivar un usuario
+server.delete('/users/:userId',
+validateAdmin,
+async(req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        await Users.update(
+            { active: false },
+            {
+                where: { id: userId }
+            }
+        )
+        
+        res.status(200).json(`User deleted succesfully.`)
     } catch (error) {
         console.error(error.message);
         res.status(400).json({error: error.message});

@@ -104,31 +104,31 @@ const TableButton = styled.button`
 function Usuarios() {
     const [userData, setUserData] = useState([]);
     
+    const fetchUsers = async () => {
+        const options = {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            method: 'GET'
+        }
+        const response = await fetch('http://localhost:3000/all-users', options);
+        const result = await response.json();
+        const userData = result.map((user) => (
+            {
+                key: user.id,
+                name: user.name,
+                lastName: user.lastName,
+                email: user.email,
+                isAdmin: user.isAdmin,
+                isEditable: false
+            }
+        ));
+        setUserData(userData);
+    }
     //load users on render
     useEffect(() => {
-        const fetchUsers = async () => {
-            const options = {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                method: 'GET'
-            }
-            const response = await fetch('http://localhost:3000/all-users', options);
-            const result = await response.json();
-            const userData = result.map((user) => (
-                {
-                    key: user.id,
-                    name: user.name,
-                    lastName: user.lastName,
-                    email: user.email,
-                    isAdmin: user.isAdmin,
-                    isEditable: false
-                }
-            ));
-            setUserData(userData);
-        }
         fetchUsers();
-    }, [userData])
+    }, [])
 
     const handleEditClick = (e) => {
         console.log(e.target)
@@ -138,9 +138,18 @@ function Usuarios() {
         // const userToEdit = userDataCopy.find((user) => user.key === parseInt(e.target.getAttribute('id')));
         // console.log(userToEdit)
         // userToEdit.isEditable = !userToEdit.isEditable
-        userDataCopy[parseInt(e.target.getAttribute('id'))-1].isEditable = true;
 
-        setUserData(userDataCopy);
+        // userDataCopy[parseInt(e.target.getAttribute('id'))-1].isEditable = true;
+        const userDataCopyFinal = userDataCopy.map((user) => {
+            if (user.key === parseInt(e.target.getAttribute('id'))) {
+                user.isEditable = true;
+                return user
+            } else {
+                return user;
+            }
+        })
+
+        setUserData(userDataCopyFinal);
     }
 
     const handleUserChange = (e) => {
@@ -155,7 +164,7 @@ function Usuarios() {
             const newUserInfo = {
                 name: e.target.parentElement.parentElement.children[0].value,
                 lastName: e.target.parentElement.parentElement.children[1].value,
-                isAdmin: e.target.parentElement.parentElement.children[3].value ? true : false,
+                isAdmin: e.target.parentElement.parentElement.children[3].value === '1' ? true : false,
             };
             console.log(newUserInfo)
             
@@ -176,14 +185,42 @@ function Usuarios() {
             //change back user.isEditable to false
             const userDataCopy = [...userData];
     
-            userDataCopy[userId-1].isEditable = false;
+            // userDataCopy[userId-1].isEditable = false;
+            const userDataCopyFinal = userDataCopy.map((user) => {
+                if (user.key === userId) {
+                    user.isEditable = false;
+                }
+                return user;
+            })
     
-            setUserData(userDataCopy);
+            setUserData(userDataCopyFinal);
+            fetchUsers();
         }
     }
 
-    const handleDeleteClick = () => {
+    const handleDeleteClick = async (e) => {
+        const confirmation = window.confirm('¿Está seguro que desea eliminar este usuario?');
+        if (confirmation) {
+            const userId = parseInt(e.target.getAttribute('id'));
+            const userDataCopy = [...userData];
+            userDataCopy.splice(userId-1, 1);
 
+            const options = {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                method: 'DELETE',
+            }
+
+            const response = await fetch(`http://localhost:3000/users/${userId}`, options);
+            const result = await response.json();
+            console.log(result);
+            setUserData(userDataCopy);
+            alert(result);
+            fetchUsers();
+        }
+
+        
     }
 
     return (
@@ -207,7 +244,7 @@ function Usuarios() {
                         {!user.isEditable ? <LastNameCell>{user.lastName}</LastNameCell> : <LastNameInput defaultValue={user.lastName} />}
                         <EmailCell>{user.email}</EmailCell>
                         {!user.isEditable ? <AdminCell>{user.isAdmin ? 'Administrador' : 'Básico'}</AdminCell> : (
-                            <AdminInput defaultValue={user.isAdmin ? 'Administrador' : 'Básico'}>
+                            <AdminInput defaultValue={user.isAdmin === true ? '1' : '0'}>
                                 <option value='1' >Administrador</option>
                                 <option value='0' >Básico</option>
                             </AdminInput>
@@ -215,10 +252,11 @@ function Usuarios() {
                         <TableButtonCell>
                             {!user.isEditable ?
                             <TableButton key={user.key} id={user.key} onClick={handleEditClick} >Edit</TableButton> :
-                            <TableButton key={user.key} id={user.key} onClick={handleSaveClick} >Save</TableButton>}
+                            <TableButton key={user.key} id={user.key} onClick={handleSaveClick} >Save</TableButton>
+                            }
                         </TableButtonCell>
                         <TableButtonCell>
-                            <TableButton key={user.key} onClick={handleDeleteClick} >Delete</TableButton>
+                            <TableButton id={user.key} onClick={handleDeleteClick} >Delete</TableButton>
                         </TableButtonCell>
                     </Row>
                     )
