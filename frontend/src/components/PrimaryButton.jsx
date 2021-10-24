@@ -9,6 +9,7 @@ const PButton = styled.button`
     height: 42px;
     border-radius: 2px;
     margin-top: 10px;
+    cursor: pointer;
 `;
 
 function PrimaryButton({text}) {

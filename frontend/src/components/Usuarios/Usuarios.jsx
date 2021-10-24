@@ -219,8 +219,6 @@ function Usuarios() {
             alert(result);
             fetchUsers();
         }
-
-        
     }
 
     return (

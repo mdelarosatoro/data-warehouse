@@ -30,6 +30,7 @@ const NavLi = styled.li`
     margin-right: 20px;
     margin-left: 20px;
     padding: 20px;
+    cursor: pointer;
 `;
 
 const activeStyle = { borderBottom: '3px solid white' }
