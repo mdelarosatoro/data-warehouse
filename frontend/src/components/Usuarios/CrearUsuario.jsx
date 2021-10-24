@@ -109,7 +109,7 @@ function CrearUsuario() {
     const handleClick = async (e) => {
         e.preventDefault();
 
-        if (password != passwordConfirm) {
+        if (password !== passwordConfirm) {
             alert('Passwords do not match.')
         } else {
             const payload = {
