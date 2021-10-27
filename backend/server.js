@@ -8,12 +8,22 @@ const expressJwt = require("express-jwt");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
+const sequelize = require("./conexion");
 
 //puerto del servidor
 const { SERVER_PORT } = process.env;
 
 //importar modelos del
-const { Users } = require("./models");
+const {
+    Users,
+    Regions,
+    Countries,
+    Cities,
+    Companies,
+    Contacts,
+    ContactChannels,
+    ContactHasChannels
+} = require("./models");
 
 //password hashing rounds
 const saltRounds = 10;
@@ -88,22 +98,29 @@ const validarCamposRegistro = (req, res ,next) => {
 }
 
 const validateAdmin = async (req, res, next) => {
-    const users = await Users.findAll({});
-    if (users.length === 0) {
-        next();
+    try {
+        const users = await Users.findAll({});
+        if (users.length === 0) {
+            next();
+        } else {
+            const userEmail = req.user.email;
+            console.log(userEmail)
+        
+            const possibleAdmin = await Users.findOne({
+                where: { email: userEmail }
+            })
+        
+            if (possibleAdmin.isAdmin) {
+                next();
+            } else {
+                res.status(400).json({error: `User ${userEmail} is not admin`})
+            }
+        }
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
     }
     
-    const userEmail = req.user.email;
-
-    const possibleAdmin = await Users.findOne({
-        where: { email: userEmail }
-    })
-
-    if (possibleAdmin.isAdmin) {
-        next();
-    } else {
-        res.status(400).json({error: `User ${userEmail} is not admin`})
-    }
 }
 
 //ENDPOINTS
@@ -279,6 +296,343 @@ server.get("/test", (req, res) => {
         res.status(400).json({error: error.message});
     }
 });
+
+//PAISES Y REGIONES ----------------------------------------------------------------
+//Create a new region
+server.post('/regions', async (req, res) => {
+    try {
+        const { name } = req.body;
+
+        const newRegion = await Regions.create({
+            name
+        })
+
+        res.status(201).json(newRegion);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//Get all regions
+server.get('/regions', async (req, res) => {
+    try {
+        const regions = await Regions.findAll({
+            include: [
+                {
+                    model: Countries,
+                    include: [
+                        {model: Cities}
+                    ]
+                },
+            ]
+        });
+
+        res.status(200).json(regions);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//Create a new country
+server.post('/countries', async (req, res) => {
+    try {
+        const { name, regionId } = req.body;
+
+        const newCountry = await Countries.create({
+            name
+        })
+
+        await newCountry.setRegion(regionId)
+
+        res.status(201).json(newCountry);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.get('/countries/:regionId', async (req, res) => {
+    try {
+        const { regionId } = req.params;
+
+        const countries = await Countries.findAll({
+            where: {
+                region_id: regionId
+            }
+        });
+
+        res.status(200).json(countries);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.put('/countries/:countryId', async (req, res) => {
+    try {
+        const { name, countryId } = req.body;
+
+        const editedCountry = await Countries.update({
+            name
+        },{
+            where: { id: countryId }
+        })
+
+        res.status(201).json(editedCountry);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.delete('/countries/:countryId', async (req, res) => {
+    try {
+        const { countryId } = req.params;
+
+        await Cities.destroy({
+            where: { country_id: countryId }
+        })
+
+        await Countries.destroy({
+            where: { id: countryId }
+        })
+
+
+        res.status(201).json(`Se eliminó el país y sus ciudades correctamente`);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//Create a new city
+server.post('/cities', async (req, res) => {
+    try {
+        const { name, countryId } = req.body;
+
+        const newCity = await Cities.create({
+            name
+        })
+
+        await newCity.setCountry(countryId);
+
+        res.status(201).json(newCity);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.get('/cities/:countryId', async (req, res) => {
+    try {
+        const { countryId } = req.params;
+
+        const cities = await Cities.findAll({
+            where: {
+                country_id: countryId
+            }
+        });
+
+        res.status(200).json(cities);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+
+server.put('/cities/:cityId', async (req, res) => {
+    try {
+        const { name, cityId } = req.body;
+
+        const editedCity = await Cities.update({
+            name
+        },{
+            where: { id: cityId }
+        })
+
+        res.status(201).json(editedCity);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.delete('/cities/:cityId', async (req, res) => {
+    try {
+        const { cityId } = req.params;
+
+        await Cities.destroy({
+            where: { id: cityId }
+        })
+
+        res.status(201).json(`Se eliminó la ciudad correctamente`);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//COMPANIES -----------------------------------------------------
+server.post('/companies', async (req, res) => {
+    try {
+        const {
+            name,
+            address,
+            email,
+            telephone,
+            cityId
+        } = req.body;
+
+        const newCompany = await Companies.create({
+            name,
+            address,
+            email,
+            telephone,
+        });
+
+        await newCompany.setCity(cityId);
+
+        res.status(201).json(newCompany)
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.get('/companies', async (req, res) => {
+    try {
+        const companies = await Companies.findAll({
+            where: {active: true},
+            include: [
+                {
+                    model: Cities
+                }
+            ]
+        });
+
+        res.status(200).json(companies);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.put('/companies/:companyId', async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        const {
+            name,
+            address,
+            email
+        } = req.body;
+
+        await Companies.update({
+            name,
+            address,
+            email
+        },{
+            where: { id: companyId }
+        })
+
+        res.status(201).json('Empresa editada correctamente.')
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.delete('/companies/:companyId', async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        await Companies.update({
+            active: false
+        },{
+            where: { id:companyId }
+        })
+
+        res.status(201).json(`Se eliminó la empresa correctamente`);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//CONTACTOS ----------------------------------------------------------
+server.post('/contacts', async (req, res) => {
+    try {
+        const {
+            name,
+            lastName,
+            position,
+            email,
+            companyId,
+            locationInfo,
+            interest,
+            contactChannels
+        } = req.body;
+
+        const newContact = await Contacts.create({
+            name,
+            lastName,
+            position,
+            email,
+            interest,
+            address: locationInfo.address
+        })
+
+        await newContact.setCompany(companyId);
+        await newContact.setCity(locationInfo.cityId);
+
+        if (contactChannels.length > 0) {
+            for (const contactChannel of contactChannels) {
+                await sequelize.query(`
+                INSERT INTO contact_has_channels (contact_id, contact_channel_id, contact_info, preferred)
+                VALUES (${newContact.id}, ${contactChannel.contactChannelId}, '${contactChannel.contactInfo}', ${contactChannel.preferred})
+                `)
+            }
+        }
+
+        res.status(201).json(`Nuevo contacto creado correctamente`)
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.get('/contacts', async (req, res) => {
+    try {
+        const contacts = await Contacts.findAll({
+            attributes: ['id', 'name', 'lastName', 'position', 'email', 'address', 'interest'],
+            include: [
+                {
+                    model: Companies,
+                    attributes: ['id', 'name', 'address', 'email', 'telephone', 'active']
+                },
+                {
+                    model: Cities,
+                    attributes: ['id', 'name']
+                },
+                {
+                    model: ContactChannels,
+                    through: { attributes: ['contactInfo'] },
+                    attributes: ['id', 'name']
+                },
+            ],
+            where: { isActive: true }
+        })
+
+        res.status(200).json(contacts);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
 
 //levantar el servidor
 server.listen(SERVER_PORT, () => {

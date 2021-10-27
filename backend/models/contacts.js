@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../conexion");
 
-const Users = sequelize.define('users', {
+const Contacts = sequelize.define('contacts', {
     id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -10,38 +10,38 @@ const Users = sequelize.define('users', {
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     lastName: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+    },
+    position: {
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
-    profilePicUrl: {
+    address: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false,
     },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false
+    interest: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0
     },
-    isAdmin: {
+    isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true
-    },
-    active: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: true
-    },
+        defaultValue: true,
+    }
 },
 {
-    tableName: 'users',
+    tableName: 'contacts',
     underscored: true,
 })
 
-module.exports = Users;
+module.exports = Contacts;
