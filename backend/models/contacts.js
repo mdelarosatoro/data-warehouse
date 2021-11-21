@@ -33,6 +33,10 @@ const Contacts = sequelize.define('contacts', {
         allowNull: false,
         defaultValue: 0
     },
+    profilePic: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

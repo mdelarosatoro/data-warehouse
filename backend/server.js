@@ -8,6 +8,7 @@ const expressJwt = require("express-jwt");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
+const { Op } = require('sequelize');
 const sequelize = require("./conexion");
 
 //puerto del servidor
@@ -370,6 +371,24 @@ server.get('/countries/:regionId', async (req, res) => {
     }
 });
 
+server.get('/countries/:countryId', async (req, res) => {
+    try {
+        const { countryId } = req.params;
+
+        const country = await Cities.findAll({
+            where: {
+                id: countryId
+            }
+        })
+
+        res.status(200).json(country);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+
 server.put('/countries/:countryId', async (req, res) => {
     try {
         const { name, countryId } = req.body;
@@ -442,6 +461,22 @@ server.get('/cities/:countryId', async (req, res) => {
     }
 });
 
+server.get('/cities/:cityId', async (req, res) => {
+    try {
+        const { cityId } = req.params;
+
+        const city = await Cities.findAll({
+            where: {
+                id: cityId
+            }
+        })
+
+        res.status(200).json(city);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
 
 server.put('/cities/:cityId', async (req, res) => {
     try {
@@ -573,7 +608,8 @@ server.post('/contacts', async (req, res) => {
             companyId,
             locationInfo,
             interest,
-            contactChannels
+            contactChannels,
+            profilePic
         } = req.body;
 
         const newContact = await Contacts.create({
@@ -582,7 +618,8 @@ server.post('/contacts', async (req, res) => {
             position,
             email,
             interest,
-            address: locationInfo.address
+            address: locationInfo.address,
+            profilePic
         })
 
         await newContact.setCompany(companyId);
@@ -604,10 +641,70 @@ server.post('/contacts', async (req, res) => {
     }
 });
 
+server.put('/contacts/:contactId', async (req, res) => {
+    try {
+        const { contactId } = req.params;
+
+        const {
+            name,
+            lastName,
+            position,
+            email,
+            companyId,
+            locationInfo,
+            interest,
+            contactChannels,
+            profilePic
+        } = req.body;
+
+        await Contacts.update(
+            {
+                name,
+                lastName,
+                position,
+                email,
+                interest,
+                address: locationInfo.address
+            },
+            {
+                where: { id: contactId },
+            }
+        )
+        
+        const editedContact = await Contacts.findOne(
+            {
+                where: { id: contactId }
+            }
+        );
+        console.log(editedContact)
+
+        await editedContact.setCompany(companyId);
+        await editedContact.setCity(locationInfo.cityId);
+        
+        await ContactHasChannels.destroy({
+            where: { contact_id: contactId },
+        })
+
+        if (contactChannels.length > 0) {
+            for (const contactChannel of contactChannels) {
+                await sequelize.query(`
+                INSERT INTO contact_has_channels (contact_id, contact_channel_id, contact_info, preferred)
+                VALUES (${editedContact.id}, ${contactChannel.contactChannelId}, '${contactChannel.contactInfo}', ${contactChannel.preferred})
+                `)
+            }
+        }
+
+        res.status(200).json(`Contacto editado correctamente.`)
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+})
+
 server.get('/contacts', async (req, res) => {
     try {
         const contacts = await Contacts.findAll({
-            attributes: ['id', 'name', 'lastName', 'position', 'email', 'address', 'interest'],
+            attributes: ['id', 'name', 'lastName', 'position', 'email', 'address', 'interest', 'profile_pic'],
             include: [
                 {
                     model: Companies,
@@ -619,7 +716,7 @@ server.get('/contacts', async (req, res) => {
                 },
                 {
                     model: ContactChannels,
-                    through: { attributes: ['contactInfo'] },
+                    through: { attributes: ['contactInfo', 'preferred'] },
                     attributes: ['id', 'name']
                 },
             ],
@@ -633,6 +730,124 @@ server.get('/contacts', async (req, res) => {
     }
 });
 
+server.get('/contacts/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        const contact = await Contacts.findAll({
+            where: { id: id },
+            attributes: ['id', 'name', 'lastName', 'position', 'email', 'address', 'interest', 'profile_pic'],
+            include: [
+                {
+                    model: Companies,
+                    attributes: ['id', 'name', 'address', 'email', 'telephone', 'active']
+                },
+                {
+                    model: Cities,
+                    attributes: ['id', 'name']
+                },
+                {
+                    model: ContactChannels,
+                    through: { attributes: ['contactInfo', 'preferred'] },
+                    attributes: ['id', 'name']
+                },
+            ],
+        })
+
+        res.status(200).json(contact);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+server.delete('/contacts/:contactId', async (req, res) => {
+    try {
+        const { contactId } = req.params;
+
+        await Contacts.update({
+            isActive: false
+        }, {
+            where: { id: contactId }
+        })
+
+        res.status(200).json('Contacto eliminado correctamente')
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+})
+
+//contact search
+server.post('/contact-search', async (req, res) => {
+    try {
+        const { query } = req.body;
+
+        const foundContacts = await Contacts.findAll({
+            attributes: ['id', 'name', 'lastName', 'position', 'email', 'address', 'interest', 'profile_pic'],
+            include: [
+                {
+                    model: Companies,
+                    attributes: ['id', 'name', 'address', 'email', 'telephone', 'active']
+                },
+                {
+                    model: Cities,
+                    attributes: ['id', 'name']
+                },
+                {
+                    model: ContactChannels,
+                    through: { attributes: ['contactInfo', 'preferred'] },
+                    attributes: ['id', 'name']
+                },
+            ],
+            where: {
+                [Op.or]: [
+                    { name: {[Op.substring]: query} },
+                    { lastName: {[Op.substring]: query} },
+                    { position: {[Op.substring]: query} },
+                    { email: {[Op.substring]: query} },
+                    { address: {[Op.substring]: query} },
+                    { interest: {[Op.substring]: query} },
+                ],
+                isActive: true
+            }
+        })
+
+        res.status(200).json(foundContacts);
+        
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+});
+
+//CONTACT CHANNELS --------------------------------
+server.get('/contact-channels', async (req, res) => {
+    try {
+        const contactChannels = await ContactChannels.findAll({});
+
+        res.status(200).json(contactChannels);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+})
+
+server.post('/contact-channels', async (req, res) => {
+    try {
+        const { name } = req.body;
+
+        const newContactChannel = await ContactChannels.create({
+            name
+        });
+
+        res.status(201).json(newContactChannel);
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).json({error: error.message});
+    }
+})
 
 //levantar el servidor
 server.listen(SERVER_PORT, () => {

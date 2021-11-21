@@ -56,51 +56,62 @@ Contacts.belongsTo(Companies, {
 Contacts.belongsToMany(ContactChannels, { through: ContactHasChannels });
 ContactChannels.belongsToMany(Contacts, { through: ContactHasChannels });
 
-(async () => {
-    try {
-        await sequelize.sync({force: true});
-        await Users.create({
-            name: "Test",
-            lastName: "Test",
-            email: "test@test.com",
-            isAdmin: true,
-            password: "$2a$10$zvqeDVCyB9o0Nff7I8E9O.wwYm5tKeil9shLAciIqZYQIrz8aKEKC"
-        })
+// (async () => {
+//     try {
+//         await sequelize.sync({force: true});
+//         await Users.create({
+//             name: "Test",
+//             lastName: "Test",
+//             email: "test@test.com",
+//             isAdmin: true,
+//             password: "$2a$10$zvqeDVCyB9o0Nff7I8E9O.wwYm5tKeil9shLAciIqZYQIrz8aKEKC"
+//         })
 
-        const testRegion = await Regions.create({ name: 'South America' })
-        const testCountry = await Countries.create({ name: 'Peru' })
-        testCountry.setRegion(testRegion.id);
-        const testCity = await Cities.create({ name: 'Lima', cityId: 1 })
-        testCity.setCountry(testCountry.id);
+//         const testRegion = await Regions.create({ name: 'South America' })
+//         const testCountry = await Countries.create({ name: 'Peru' })
+//         testCountry.setRegion(testRegion.id);
+//         const testCity = await Cities.create({ name: 'Lima', cityId: 1 })
+//         testCity.setCountry(testCountry.id);
 
-        const testCompany = await Companies.create({
-            name: "TestCompany",
-            address: "123 Main St",
-            email: "test@test.com",
-            telephone: "123-123-123",
-        })
-        await testCompany.setCity(testCity);
+//         const testCompany = await Companies.create({
+//             name: "TestCompany",
+//             address: "123 Main St",
+//             email: "test@test.com",
+//             telephone: "123-123-123",
+//         })
+//         await testCompany.setCity(testCity);
 
-        const testContactChannel = await ContactChannels.create({ name: 'Whatsapp' })
+//         const testContactChannel1 = await ContactChannels.create({ name: 'Whatsapp' })
+//         const testContactChannel2 = await ContactChannels.create({ name: 'Email' })
+//         const testContactChannel3 = await ContactChannels.create({ name: 'LinkedIn' })
 
-        const testContact = await Contacts.create({
-            name: "Test",
-            lastName: "Test",
-            position: 'Marketing Manager',
-            email: "testcontact@testcontact.com",
-            address: "123 Main Contact St",
-            interest: 0.5
-        })
-        await testContact.setCity(testCity.id);
-        await testContact.setCompany(testCompany.id);
-        await sequelize.query(`
-        INSERT INTO contact_has_channels (contact_id, contact_channel_id, contact_info, preferred)
-        VALUES (${testContact.id}, ${testContactChannel.id}, '+51 979 301 974', true);
-        `)
-    } catch (error) { 
-        console.error(error.message);
-    }
-})();
+//         const testContact = await Contacts.create({
+//             name: "Test",
+//             lastName: "Test",
+//             position: 'Marketing Manager',
+//             email: "testcontact@testcontact.com",
+//             address: "123 Main Contact St",
+//             interest: 0.5,
+//             profilePic: 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Pierre-Person.jpg'
+//         })
+//         await testContact.setCity(testCity.id);
+//         await testContact.setCompany(testCompany.id);
+//         await sequelize.query(`
+//         INSERT INTO contact_has_channels (contact_id, contact_channel_id, contact_info, preferred)
+//         VALUES (${testContact.id}, ${testContactChannel1.id}, '+51 979 301 974', true);
+//         `)
+//         await sequelize.query(`
+//         INSERT INTO contact_has_channels (contact_id, contact_channel_id, contact_info, preferred)
+//         VALUES (${testContact.id}, ${testContactChannel2.id}, 'contact@email.com', true);
+//         `)
+//         await sequelize.query(`
+//         INSERT INTO contact_has_channels (contact_id, contact_channel_id, contact_info, preferred)
+//         VALUES (${testContact.id}, ${testContactChannel3.id}, 'Test LinkedIn', true);
+//         `)
+//     } catch (error) { 
+//         console.error(error.message);
+//     }
+// })();
 
 module.exports = {
     Users,
