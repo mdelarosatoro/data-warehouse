@@ -2,6 +2,8 @@
 
 Proyecto final de la carrera de Desarrollo Web Full Stack de Acámica. Consiste en la creación de un Data Warehouse para que una empresa pueda administrar datos de usuarios, regiones, países, ciudades, compañías, contactos y canales de contacto.
 
+Las tecnologías utilizadas en este proyecto son las siguientes: ReactJS, Styled Components ExpressJS, MySQL, Sequelize, HTML, CSS, JS, JWT authentication, Bcrypt. 
+
 ## Instrucciones de instalación
 
 1. Para empezar, deberá clonar el repositorio y correr npm install tanto en la carpeta de frontend como en la de backend para instalar las dependencias de cada uno.
