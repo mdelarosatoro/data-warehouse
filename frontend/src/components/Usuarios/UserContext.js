@@ -21,11 +21,12 @@ export const UserProvider = (props) => {
                 history.push('/login')
             }
             const result = await response.json();
-            const { email, name, lastName } = result;
+            const { email, name, lastName, isAdmin } = result;
             const userDataObj = {
                 email,
                 name,
-                lastName
+                lastName,
+                isAdmin
             }
             setUserData(userDataObj);
         }

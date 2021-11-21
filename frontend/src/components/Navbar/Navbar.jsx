@@ -38,6 +38,7 @@ const activeStyle = { borderBottom: '3px solid white' }
 
 function Navbar(props) {
     const [userData] = useContext(UserContext);
+    
 
     return (
         <Nav>
@@ -55,9 +56,9 @@ function Navbar(props) {
                 <NavLink className='nav-link' to="/regiones" activeStyle={activeStyle}>
                     <NavLi>Ciudad / Región</NavLi>
                 </NavLink>
-                <NavLink className='nav-link' to="/usuarios" activeStyle={activeStyle}> 
+                {userData.isAdmin && <NavLink className='nav-link' to="/usuarios" activeStyle={activeStyle}> 
                     <NavLi>Usuarios</NavLi>
-                </NavLink>
+                </NavLink>}
             </ NavUl>}
         </Nav>
     )
