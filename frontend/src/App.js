@@ -11,6 +11,7 @@ import Usuarios from './components/Usuarios/Usuarios';
 import { UserProvider } from './components/Usuarios/UserContext';
 import CrearUsuario from './components/Usuarios/CrearUsuario';
 import CrearEmpresa from './components/Empresas/CrearEmpresa';
+import CrearContacto from './components/Contactos/CrearContacto';
 
 function App(props) {
   const [token, setToken] = useState(null);
@@ -53,6 +54,7 @@ function App(props) {
             <Route path='/usuarios' component={() => <Usuarios />} />
             <Route path='/crear-usuario' component={() => <CrearUsuario />} />
             <Route path='/crear-empresa' component={() => <CrearEmpresa />} />
+            <Route path='/crear-contacto' component={() => <CrearContacto />} />
           </Switch>
       </div>
     </UserProvider>
